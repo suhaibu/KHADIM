@@ -1,20 +1,233 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>منصة المريد للباحثين</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700;800;900&display=swap" rel="stylesheet">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المريد المعرفي | الإصدار المصحح</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;600;900&display=swap" rel="stylesheet">
     <style>
-      body {
-        font-family: 'Tajawal', sans-serif;
-      }
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        .font-serif-arabic { font-family: 'Amiri', serif; }
+        .hidden { display: none; }
+        .active-tab { color: #064e3b; border-bottom: 3px solid #064e3b; }
+        .chat-box { height: 450px; overflow-y: auto; scroll-behavior: smooth; background: #ffffff; }
+        /* تحسين مظهر المفكرة */
+        .notebook-area { min-height: 500px; line-height: 2; font-size: 1.2rem; }
     </style>
-  </head>
-  <body class="bg-gray-50 text-gray-900">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+</head>
+<body>
+
+    <nav class="bg-white border-b p-4 sticky top-0 z-50 shadow-sm flex justify-between items-center px-8">
+        <div class="flex items-center gap-3">
+            <div class="bg-emerald-900 text-white p-2 rounded-lg font-bold">📜</div>
+            <span class="font-black text-emerald-950 text-xl">المريد المعرفي</span>
+        </div>
+        <div class="flex gap-6 text-xs font-bold text-gray-400">
+            <button onclick="showPage('home')" id="btn-home" class="active-tab uppercase py-2">الرئيسية</button>
+            <button onclick="showPage('lib')" id="btn-lib" class="uppercase py-2">المكتبة</button>
+            <button onclick="showPage('res')" id="btn-res" class="uppercase py-2">الباحث</button>
+            <button onclick="showPage('proj')" id="btn-proj" class="uppercase py-2">المشاريع</button>
+        </div>
+        <button onclick="toggleLang()" class="bg-emerald-50 text-emerald-900 px-4 py-1 rounded-full text-[10px] font-bold border uppercase">AR | FR</button>
+    </nav>
+
+    <main class="p-6 max-w-6xl mx-auto min-h-screen">
+        
+        <section id="page-home" class="text-center py-20 space-y-8">
+            <h1 class="text-6xl font-black text-emerald-950 font-serif-arabic leading-tight">المنصة العلمية<br><span class="text-emerald-700">المتكاملة</span></h1>
+            <p class="text-gray-500 max-w-xl mx-auto italic">تم إصلاح نظام الاتصال وتوسيع مساحات التدوين لخدمة البحث المريدي.</p>
+            <button onclick="showPage('res')" class="bg-emerald-950 text-white px-12 py-5 rounded-[30px] font-black text-xl shadow-xl transition-transform hover:scale-105">ابدأ الاستكشاف</button>
+        </section>
+
+        <section id="page-res" class="hidden">
+            <div class="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-50">
+                <div class="p-4 bg-emerald-900 text-white font-bold flex justify-between">
+                    <span>الباحث العرفاني الذكي</span>
+                    <span class="text-[10px] opacity-60">Gemini 1.5 Flash</span>
+                </div>
+                <div id="chat-container" class="chat-box p-6 space-y-6 flex flex-col bg-slate-50">
+                    <div class="bg-emerald-100 text-emerald-900 p-4 rounded-2xl text-sm italic self-start max-w-[80%]">تم تفعيل الاتصال المباشر بنجاح. تفضل بطرح تساؤلك...</div>
+                </div>
+                <div class="p-6 bg-white border-t flex gap-4">
+                    <input type="text" id="chat-input" class="flex-1 p-4 bg-gray-50 border-2 border-transparent focus:border-emerald-900 rounded-2xl outline-none transition-all" placeholder="اطرح تساؤلك العلمي هنا...">
+                    <button onclick="askAI()" id="send-btn" class="bg-emerald-950 text-white px-10 rounded-2xl font-bold hover:bg-black">إرسال</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-proj" class="hidden">
+            <div id="proj-list-view" class="space-y-6">
+                <button onclick="newProject()" class="bg-emerald-900 text-white px-8 py-4 rounded-2xl font-bold shadow-lg">+ مشروع بحثي جديد</button>
+                <div id="proj-grid" class="grid md:grid-cols-2 gap-6"></div>
+            </div>
+            
+            <div id="proj-edit-view" class="hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <button onclick="closeProject()" class="text-emerald-800 font-bold">← عودة للمشاريع</button>
+                    <h2 id="current-proj-title" class="text-2xl font-black text-emerald-950"></h2>
+                    <button onclick="saveProjectNotes()" class="bg-emerald-950 text-white px-8 py-2 rounded-xl font-bold">حفظ الملاحظات</button>
+                </div>
+                <textarea id="project-notebook" class="w-full notebook-area p-8 bg-white border-2 border-emerald-50 rounded-[40px] shadow-inner outline-none focus:border-emerald-900 font-serif-arabic transition-all" placeholder="اكتب مخرجات البحث والاستدلالات العرفانية هنا بفيض وحرية..."></textarea>
+            </div>
+        </section>
+
+        <section id="page-lib" class="hidden">
+            <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl border">
+                <h2 class="text-2xl font-black text-emerald-900">خزانة المصادر</h2>
+                <label class="bg-emerald-900 text-white px-6 py-2 rounded-xl cursor-pointer font-bold">
+                    إضافة مصدر
+                    <input type="file" class="hidden" onchange="uploadFile(this)">
+                </label>
+            </div>
+            <div id="lib-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- الإعدادات ---
+        const API_KEY = "AIzaSyCiS6X7_L59O0Lz-nF-hEUPN8-H4-QnO-4";
+        let activeProjectIndex = null;
+
+        function showPage(pageId) {
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('page-' + pageId).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
+            const btn = document.getElementById('btn-' + pageId);
+            if(btn) btn.classList.add('active-tab');
+        }
+
+        // --- تصحيح الباحث الذكي (استخدام الـ API الصحيح) ---
+        async function askAI() {
+            const input = document.getElementById('chat-input');
+            const container = document.getElementById('chat-container');
+            const btn = document.getElementById('send-btn');
+            
+            if(!input.value.trim()) return;
+
+            const userText = input.value;
+            const userMsg = document.createElement('div');
+            userMsg.className = "bg-white border-2 border-emerald-50 p-4 rounded-2xl text-sm self-end shadow-sm max-w-[80%] mb-2";
+            userMsg.innerText = userText;
+            container.appendChild(userMsg);
+
+            input.value = "";
+            btn.disabled = true;
+            btn.innerText = "...";
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: userText }] }] })
+                });
+                
+                const data = await response.json();
+                const aiResponse = data.candidates[0].content.parts[0].text;
+
+                const aiMsg = document.createElement('div');
+                aiMsg.className = "bg-emerald-900 text-white p-6 rounded-3xl font-serif-arabic text-xl self-start shadow-xl max-w-[85%] leading-relaxed";
+                aiMsg.innerText = aiResponse;
+                container.appendChild(aiMsg);
+            } catch (e) {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = "text-red-500 text-xs italic p-2 self-start";
+                errorMsg.innerText = "فشل في جلب الإجابة. يرجى التحقق من حصة المفتاح (Quota) أو اتصال السيرفر.";
+                container.appendChild(errorMsg);
+            }
+
+            btn.disabled = false;
+            btn.innerText = "إرسال";
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- نظام المشاريع المطور (المفكرة الكبيرة) ---
+        function newProject() {
+            const title = prompt("اسم المشروع البحثي الجديد:");
+            if(!title) return;
+            const proj = JSON.parse(localStorage.getItem('m_proj') || '[]');
+            proj.push({ title, note: "" });
+            localStorage.setItem('m_proj', JSON.stringify(proj));
+            renderProj();
+        }
+
+        function renderProj() {
+            const grid = document.getElementById('proj-grid');
+            const proj = JSON.parse(localStorage.getItem('m_proj') || '[]');
+            grid.innerHTML = proj.map((p, i) => `
+                <div class="bg-white p-8 rounded-[35px] border-r-8 border-emerald-900 shadow-md flex justify-between items-center transition-hover hover:shadow-lg">
+                    <h4 class="font-black text-emerald-950 text-lg">${p.title}</h4>
+                    <button onclick="openProject(${i})" class="bg-emerald-900 text-white px-6 py-2 rounded-xl text-xs font-bold">فتح المفكرة الكبيرة</button>
+                </div>
+            `).join('');
+        }
+
+        function openProject(index) {
+            const proj = JSON.parse(localStorage.getItem('m_proj') || '[]');
+            activeProjectIndex = index;
+            document.getElementById('proj-list-view').classList.add('hidden');
+            document.getElementById('proj-edit-view').classList.remove('hidden');
+            document.getElementById('current-proj-title').innerText = proj[index].title;
+            document.getElementById('project-notebook').value = proj[index].note || "";
+        }
+
+        function saveProjectNotes() {
+            const proj = JSON.parse(localStorage.getItem('m_proj') || '[]');
+            const notes = document.getElementById('project-notebook').value;
+            proj[activeProjectIndex].note = notes;
+            localStorage.setItem('m_proj', JSON.stringify(proj));
+            alert("تم حفظ كل ما دونته في سجلات المشروع.");
+        }
+
+        function closeProject() {
+            document.getElementById('proj-list-view').classList.remove('hidden');
+            document.getElementById('proj-edit-view').classList.add('hidden');
+            renderProj();
+        }
+
+        // --- المكتبة ---
+        function uploadFile(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const lib = JSON.parse(localStorage.getItem('m_lib') || '[]');
+                lib.push({ name: file.name, type: file.type, data: e.target.result });
+                localStorage.setItem('m_lib', JSON.stringify(lib));
+                renderLib();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderLib() {
+            const grid = document.getElementById('lib-grid');
+            const lib = JSON.parse(localStorage.getItem('m_lib') || '[]');
+            grid.innerHTML = lib.map((f, i) => `
+                <div class="bg-white p-6 rounded-[30px] border shadow-sm text-center relative group">
+                    <div class="text-4xl mb-4">${f.type.includes('video')?'🎥':f.type.includes('audio')?'🎙️':'📄'}</div>
+                    <h3 class="text-xs font-bold truncate mb-4">${f.name}</h3>
+                    <div class="h-32 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden">
+                        ${f.type.includes('image')?`<img src="${f.data}" class="h-full">`:''}
+                        ${f.type.includes('video')?`<video src="${f.data}" controls class="h-full"></video>`:''}
+                        ${f.type.includes('audio')?`<audio src="${f.data}" controls class="w-full px-2"></audio>`:''}
+                    </div>
+                    <button onclick="deleteLib(${i})" class="absolute top-4 left-4 text-red-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-all">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteLib(i) {
+            const lib = JSON.parse(localStorage.getItem('m_lib') || '[]');
+            lib.splice(i, 1);
+            localStorage.setItem('m_lib', JSON.stringify(lib));
+            renderLib();
+        }
+
+        // التشغيل الأولي
+        renderProj();
+        renderLib();
+    </script>
+</body>
 </html>
